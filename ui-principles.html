@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שאלון עקרונות UI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #00B4D8, #90E0EF);
+      direction: rtl;
+      color: #333;
+    }
+
+    /* כל הסגנונות זהים לשאלונים הקודמים, רק עם צבעים שונים */
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      position: absolute;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .container.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .back-button {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #333;
+    }
+
+    /* תיקון לפרוגרס בר */
+    .progress-bar {
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #00B4D8, #90E0EF);
+      transition: width 0.3s ease;
+    }
+
+    /* תיקון להסתרת אלמנטים */
+    .hidden {
+      display: none !important;
+    }
+
+    /* תיקון לכפתורים */
+    .answer-button {
+      width: 100%;
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+
+    /* תיקון לטקסט */
+    h1, h2 {
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin-bottom: 2rem;
+    }
+
+    .score {
+      color: #00B4D8;
+    }
+
+    .answers-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    button {
+      padding: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .correct {
+      background: #22C55E;
+      color: white;
+      border-color: #22C55E;
+      animation: pulse 0.5s;
+    }
+
+    .incorrect {
+      background: #EF4444;
+      color: white;
+      border-color: #EF4444;
+      animation: shake 0.5s;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    #feedback {
+      min-height: 30px;
+      margin: 1rem 0;
+      font-weight: bold;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+
+    #feedback.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="landing">
+    <button class="back-button" onclick="window.location.href='home.html'">←</button>
+    <h1>שאלון עקרונות UI</h1>
+    <p>בואו נבדוק את הידע שלכם בעיצוב ממשק משתמש! 📱</p>
+    <button id="startButton">התחל</button>
+  </div>
+
+  <!-- אחרי הדיב הראשון -->
+  <div class="container hidden" id="quiz">
+    <div class="score">ניקוד: <span id="score">0</span> / <span id="totalQuestions">0</span></div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <h2 id="questionText"></h2>
+    <div class="answers-grid">
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+    </div>
+    <div id="feedback"></div>
+    <button id="nextButton" class="hidden">השאלה הבאה</button>
+  </div>
+
+  <div class="container hidden" id="result">
+    <button class="back-button" onclick="window.location.href='home.html'">←</button>
+    <h1>כל הכבוד! 🎉</h1>
+    <p>הצלחת לענות נכון על <span id="finalScore">0</span> שאלות מתוך <span id="totalQuestionsEnd">0</span></p>
+    <button id="restartButton">נסה שוב</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "מהו עיקרון ה-Hierarchy בעיצוב UI?",
+        answers: [
+          { text: "סדר האלמנטים בדף", correct: false },
+          { text: "ארגון ויזואלי לפי חשיבות", correct: true },
+          { text: "גודל האלמנטים", correct: false },
+          { text: "צבעי האלמנטים", correct: false }
+        ]
+      },
+      {
+        question: "מהו Whitespace בעיצוב ממשק?",
+        answers: [
+          { text: "רקע לבן", correct: false },
+          { text: "מרווח ריק מכוון", correct: true },
+          { text: "צבע בהיר", correct: false },
+          { text: "טקסט בצבע לבן", correct: false }
+        ]
+      },
+      {
+        question: "מהו עיקרון ה-Consistency?",
+        answers: [
+          { text: "עיצוב אחיד ועקבי", correct: true },
+          { text: "שימוש בצבע אחד", correct: false },
+          { text: "גודל קבוע לכל האלמנטים", correct: false },
+          { text: "שימוש בגופן אחד", correct: false }
+        ]
+      },
+      {
+        question: "מהו Contrast ולמה הוא חשוב?",
+        answers: [
+          { text: "ניגודיות לעיצוב יפה", correct: false },
+          { text: "ניגודיות לנגישות וקריאות", correct: true },
+          { text: "שימוש בצבעים מנוגדים", correct: false },
+          { text: "הבדלי גודל בין אלמנטים", correct: false }
+        ]
+      },
+      {
+        question: "מהו עיקרון ה-Feedback?",
+        answers: [
+          { text: "תגובות משתמשים", correct: false },
+          { text: "משוב ויזואלי לפעולות", correct: true },
+          { text: "הערות מהלקוח", correct: false },
+          { text: "דירוג המוצר", correct: false }
+        ]
+      },
+      {
+        question: "מהו Affordance בעיצוב UI?",
+        answers: [
+          { text: "מחיר המוצר", correct: false },
+          { text: "רמז ויזואלי לפעולה אפשרית", correct: true },
+          { text: "גודל האלמנטים", correct: false },
+          { text: "מיקום בדף", correct: false }
+        ]
+      },
+      {
+        question: "מהי חשיבות ה-Grid System?",
+        answers: [
+          { text: "יצירת עיצוב מסודר ועקבי", correct: true },
+          { text: "הוספת קווים לעיצוב", correct: false },
+          { text: "יצירת טבלאות", correct: false },
+          { text: "סידור תמונות", correct: false }
+        ]
+      },
+      {
+        question: "מהו Mobile First Design?",
+        answers: [
+          { text: "עיצוב רק למובייל", correct: false },
+          { text: "עיצוב תחילה למובייל", correct: true },
+          { text: "עיצוב אפליקציות", correct: false },
+          { text: "עיצוב רספונסיבי", correct: false }
+        ]
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const elements = {
+      landing: document.getElementById('landing'),
+      quiz: document.getElementById('quiz'),
+      result: document.getElementById('result'),
+      questionText: document.getElementById('questionText'),
+      score: document.getElementById('score'),
+      finalScore: document.getElementById('finalScore'),
+      feedback: document.getElementById('feedback'),
+      nextButton: document.getElementById('nextButton'),
+      progressFill: document.querySelector('.progress-fill'),
+      totalQuestions: document.getElementById('totalQuestions'),
+      totalQuestionsEnd: document.getElementById('totalQuestionsEnd')
+    };
+
+    // הצג את המסך הראשון
+    setTimeout(() => {
+      elements.landing.classList.add('active');
+    }, 100);
+
+    function switchScreen(from, to) {
+      from.classList.remove('active');
+      setTimeout(() => {
+        from.classList.add('hidden');
+        to.classList.remove('hidden');
+        setTimeout(() => {
+          to.classList.add('active');
+        }, 50);
+      }, 300);
+    }
+
+    function startQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      elements.score.textContent = '0';
+      elements.totalQuestions.textContent = questions.length;
+      elements.totalQuestionsEnd.textContent = questions.length;
+      switchScreen(elements.landing, elements.quiz);
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const question = questions[currentQuestion];
+      elements.questionText.textContent = question.question;
+      elements.feedback.textContent = '';
+      elements.feedback.classList.remove('show');
+      elements.nextButton.classList.add('hidden');
+
+      elements.progressFill.style.width = `${(currentQuestion + 1) / questions.length * 100}%`;
+
+      const buttons = document.querySelectorAll('.answer-button');
+      buttons.forEach((button, index) => {
+        button.textContent = question.answers[index].text;
+        button.dataset.correct = question.answers[index].correct;
+        button.disabled = false;
+        button.className = 'answer-button';
+        button.style.opacity = '0';
+        setTimeout(() => {
+          button.style.opacity = '1';
+        }, index * 100);
+      });
+    }
+
+    function handleAnswer(e) {
+      const button = e.target;
+      const isCorrect = button.dataset.correct === "true";
+
+      if (isCorrect) {
+        score++;
+        elements.score.textContent = score;
+        button.classList.add('correct');
+        elements.feedback.textContent = "נכון! 🎉";
+      } else {
+        button.classList.add('incorrect');
+        elements.feedback.textContent = "לא נכון! ❌";
+        document.querySelectorAll('.answer-button').forEach(btn => {
+          if (btn.dataset.correct === "true") {
+            btn.classList.add('correct');
+          }
+        });
+      }
+
+      elements.feedback.classList.add('show');
+      
+      document.querySelectorAll('.answer-button').forEach(btn => {
+        btn.disabled = true;
+      });
+
+      setTimeout(() => {
+        elements.nextButton.classList.remove('hidden');
+        elements.nextButton.style.opacity = '0';
+        setTimeout(() => {
+          elements.nextButton.style.opacity = '1';
+        }, 50);
+      }, 1000);
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      elements.finalScore.textContent = score;
+      switchScreen(elements.quiz, elements.result);
+    }
+
+    function restartQuiz() {
+      switchScreen(elements.result, elements.landing);
+    }
+
+    // Event Listeners
+    document.getElementById('startButton').addEventListener('click', startQuiz);
+    document.getElementById('nextButton').addEventListener('click', nextQuestion);
+    document.getElementById('restartButton').addEventListener('click', restartQuiz);
+    document.querySelectorAll('.answer-button').forEach(button => {
+      button.addEventListener('click', handleAnswer);
+    });
+  </script>
+</body>
+</html> 

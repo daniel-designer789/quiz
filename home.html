@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>שאלוני עיצוב</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      direction: rtl;
+      color: #fff;
+    }
+
+    .header {
+      text-align: center;
+      padding: 3rem 1rem;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .quizzes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .quiz-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quiz-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .quiz-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
+    }
+
+    .quiz-card:hover::after {
+      transform: translateX(100%);
+    }
+
+    .quiz-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .quiz-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+
+    .quiz-description {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin-bottom: 1.5rem;
+    }
+
+    .quiz-stats {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .start-button {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 1rem;
+    }
+
+    .start-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>שאלוני עיצוב</h1>
+    <div class="subtitle">בחר את הנושא שמעניין אותך ובדוק את הידע שלך!</div>
+  </div>
+
+  <div class="quizzes-grid">
+    <div class="quiz-card" onclick="window.location.href='color-theory.html'">
+      <div class="quiz-icon">🎨</div>
+      <div class="quiz-title">תורת הצבע</div>
+      <div class="quiz-description">למד על צבעים משלימים, סכמות צבעים, ופסיכולוגיה של צבעים</div>
+      <div class="quiz-stats">
+        <span>12 שאלות</span>
+        <span>•</span>
+        <span>10 דקות</span>
+      </div>
+      <button class="start-button">התחל</button>
+    </div>
+
+    <div class="quiz-card" onclick="window.location.href='typography.html'">
+      <div class="quiz-icon">📝</div>
+      <div class="quiz-title">טיפוגרפיה</div>
+      <div class="quiz-description">גלה את עולם הגופנים, המרווחים והקריאות</div>
+      <div class="quiz-stats">
+        <span>10 שאלות</span>
+        <span>•</span>
+        <span>8 דקות</span>
+      </div>
+      <button class="start-button">התחל</button>
+    </div>
+
+    <div class="quiz-card" onclick="window.location.href='ui-principles.html'">
+      <div class="quiz-icon">📱</div>
+      <div class="quiz-title">עקרונות UI</div>
+      <div class="quiz-description">למד על עיצוב ממשק משתמש, מבנה ואינטראקציה</div>
+      <div class="quiz-stats">
+        <span>15 שאלות</span>
+        <span>•</span>
+        <span>12 דקות</span>
+      </div>
+      <button class="start-button">התחל</button>
+    </div>
+
+    <div class="quiz-card" onclick="window.location.href='layout-design.html'">
+      <div class="quiz-icon">📐</div>
+      <div class="quiz-title">עיצוב ופריסה</div>
+      <div class="quiz-description">הבן את עקרונות הגריד, האיזון והקומפוזיציה</div>
+      <div class="quiz-stats">
+        <span>12 שאלות</span>
+        <span>•</span>
+        <span>10 דקות</span>
+      </div>
+      <button class="start-button">התחל</button>
+    </div>
+
+    <div class="quiz-card" onclick="window.location.href='ux-design.html'">
+      <div class="quiz-icon">🎯</div>
+      <div class="quiz-title">חווית משתמש</div>
+      <div class="quiz-description">למד על UX, מחקר משתמשים ואפיון ממשקים</div>
+      <div class="quiz-stats">
+        <span>14 שאלות</span>
+        <span>•</span>
+        <span>11 דקות</span>
+      </div>
+      <button class="start-button">התחל</button>
+    </div>
+
+    <div class="quiz-card" onclick="window.location.href='design-tools.html'">
+      <div class="quiz-icon">🛠️</div>
+      <div class="quiz-title">כלי עיצוב</div>
+      <div class="quiz-description">הכר את הכלים המובילים בתעשיית העיצוב</div>
+      <div class="quiz-stats">
+        <span>10 שאלות</span>
+        <span>•</span>
+        <span>8 דקות</span>
+      </div>
+      <button class="start-button">התחל</button>
+    </div>
+  </div>
+</body>
+</html> 

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>שאלון עיצוב</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      direction: rtl;
+      color: #333;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      position: absolute;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .container.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .answers-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    button {
+      padding: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s, height 0.3s;
+    }
+
+    button:active::after {
+      width: 200px;
+      height: 200px;
+    }
+
+    .correct {
+      background: #22C55E;
+      color: white;
+      border-color: #22C55E;
+      animation: pulse 0.5s;
+    }
+
+    .incorrect {
+      background: #EF4444;
+      color: white;
+      border-color: #EF4444;
+      animation: shake 0.5s;
+    }
+
+    .hidden {
+      display: none;
+      opacity: 0;
+    }
+
+    #feedback {
+      min-height: 30px;
+      margin: 1rem 0;
+      font-weight: bold;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+
+    #feedback.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4F46E5, #7C3AED);
+      width: 0;
+      transition: width 0.3s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .score {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #4F46E5;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      color: #4F46E5;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      color: #1F2937;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="landing">
+    <h1>שאלון עיצוב</h1>
+    <p>בואו נבדוק כמה אתם מבינים בעיצוב! 🎨</p>
+    <button id="startButton">התחל</button>
+  </div>
+
+  <div class="container hidden" id="quiz">
+    <div class="score">ניקוד: <span id="score">0</span> / <span id="totalQuestions">0</span></div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <h2 id="questionText"></h2>
+    <div class="answers-grid">
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+    </div>
+    <div id="feedback"></div>
+    <button id="nextButton" class="hidden">השאלה הבאה</button>
+  </div>
+
+  <div class="container hidden" id="result">
+    <h1>כל הכבוד! 🎉</h1>
+    <p>הצלחת לענות נכון על <span id="finalScore">0</span> שאלות מתוך <span id="totalQuestionsEnd">0</span></p>
+    <button id="restartButton">נסה שוב</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "איזה מהבאים הוא צבע משלים לכחול?",
+        answers: [
+          { text: "ירוק", correct: false },
+          { text: "צהוב", correct: false },
+          { text: "כתום", correct: true },
+          { text: "סגול", correct: false }
+        ]
+      },
+      {
+        question: "מהו Kerning בטיפוגרפיה?",
+        answers: [
+          { text: "מרווח בין שורות", correct: false },
+          { text: "התאמה של ריווח בין אותיות", correct: true },
+          { text: "סגנון גופן", correct: false },
+          { text: "עיצוב רקע טקסט", correct: false }
+        ]
+      },
+      {
+        question: "איזה עיקרון עיצובי מתייחס ליצירת ניגודיות בין אלמנטים?",
+        answers: [
+          { text: "קונטרסט", correct: true },
+          { text: "סימטריה", correct: false },
+          { text: "איזון", correct: false },
+          { text: "הרמוניה", correct: false }
+        ]
+      },
+      {
+        question: "מהו המונח Whitespace בעיצוב?",
+        answers: [
+          { text: "צבע לבן", correct: false },
+          { text: "חלל ריק מכוון", correct: true },
+          { text: "רקע בהיר", correct: false },
+          { text: "גופן בהיר", correct: false }
+        ]
+      },
+      {
+        question: "איזה פורמט קובץ מאפשר שקיפות?",
+        answers: [
+          { text: "JPG", correct: false },
+          { text: "PNG", correct: true },
+          { text: "BMP", correct: false },
+          { text: "GIF", correct: false }
+        ]
+      },
+      {
+        question: "מהו Golden Ratio?",
+        answers: [
+          { text: "1:1", correct: false },
+          { text: "1:2", correct: false },
+          { text: "1:1.618", correct: true },
+          { text: "2:3", correct: false }
+        ]
+      },
+      {
+        question: "איזה צבע נוצר מערבוב אדום וכחול?",
+        answers: [
+          { text: "ירוק", correct: false },
+          { text: "כתום", correct: false },
+          { text: "חום", correct: false },
+          { text: "סגול", correct: true }
+        ]
+      },
+      {
+        question: "איזה סוג גופן מתאים ביותר לטקסט ארוך?",
+        answers: [
+          { text: "Serif", correct: true },
+          { text: "Display", correct: false },
+          { text: "Decorative", correct: false },
+          { text: "Script", correct: false }
+        ]
+      },
+      {
+        question: "מהו CMYK?",
+        answers: [
+          { text: "מודל צבעים למסך", correct: false },
+          { text: "מודל צבעים להדפסה", correct: true },
+          { text: "סוג של תמונה", correct: false },
+          { text: "פורמט קובץ", correct: false }
+        ]
+      },
+      {
+        question: "איזה כלי משמש ליצירת מעברי צבע חלקים?",
+        answers: [
+          { text: "Gradient", correct: true },
+          { text: "Pattern", correct: false },
+          { text: "Filter", correct: false },
+          { text: "Mask", correct: false }
+        ]
+      },
+      {
+        question: "מהו המונח Responsive Design?",
+        answers: [
+          { text: "עיצוב מהיר", correct: false },
+          { text: "עיצוב מגיב למסכים שונים", correct: true },
+          { text: "עיצוב אינטראקטיבי", correct: false },
+          { text: "עיצוב דינמי", correct: false }
+        ]
+      },
+      {
+        question: "איזה מהבאים הוא צבע משלים לאדום?",
+        answers: [
+          { text: "צהוב", correct: false },
+          { text: "כחול", correct: false },
+          { text: "ירוק", correct: true },
+          { text: "סגול", correct: false }
+        ]
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const elements = {
+      landing: document.getElementById('landing'),
+      quiz: document.getElementById('quiz'),
+      result: document.getElementById('result'),
+      questionText: document.getElementById('questionText'),
+      score: document.getElementById('score'),
+      finalScore: document.getElementById('finalScore'),
+      feedback: document.getElementById('feedback'),
+      nextButton: document.getElementById('nextButton'),
+      progressFill: document.querySelector('.progress-fill'),
+      totalQuestions: document.getElementById('totalQuestions'),
+      totalQuestionsEnd: document.getElementById('totalQuestionsEnd')
+    };
+
+    // הצג את המסך הראשון
+    setTimeout(() => {
+      elements.landing.classList.add('active');
+    }, 100);
+
+    function switchScreen(from, to) {
+      from.classList.remove('active');
+      setTimeout(() => {
+        from.classList.add('hidden');
+        to.classList.remove('hidden');
+        setTimeout(() => {
+          to.classList.add('active');
+        }, 50);
+      }, 300);
+    }
+
+    function startQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      elements.score.textContent = '0';
+      elements.totalQuestions.textContent = questions.length;
+      elements.totalQuestionsEnd.textContent = questions.length;
+      switchScreen(elements.landing, elements.quiz);
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const question = questions[currentQuestion];
+      elements.questionText.textContent = question.question;
+      elements.feedback.textContent = '';
+      elements.feedback.classList.remove('show');
+      elements.nextButton.classList.add('hidden');
+
+      // עדכון פרוגרס בר
+      elements.progressFill.style.width = `${(currentQuestion + 1) / questions.length * 100}%`;
+
+      const buttons = document.querySelectorAll('.answer-button');
+      buttons.forEach((button, index) => {
+        button.textContent = question.answers[index].text;
+        button.dataset.correct = question.answers[index].correct;
+        button.disabled = false;
+        button.className = 'answer-button';
+        // אנימציית הופעה הדרגתית לכפתורים
+        button.style.opacity = '0';
+        setTimeout(() => {
+          button.style.opacity = '1';
+        }, index * 100);
+      });
+    }
+
+    function handleAnswer(e) {
+      const button = e.target;
+      const isCorrect = button.dataset.correct === "true";
+
+      if (isCorrect) {
+        score++;
+        elements.score.textContent = score;
+        button.classList.add('correct');
+        elements.feedback.textContent = "נכון! 🎉";
+      } else {
+        button.classList.add('incorrect');
+        elements.feedback.textContent = "לא נכון! ❌";
+        document.querySelectorAll('.answer-button').forEach(btn => {
+          if (btn.dataset.correct === "true") {
+            btn.classList.add('correct');
+          }
+        });
+      }
+
+      elements.feedback.classList.add('show');
+
+      document.querySelectorAll('.answer-button').forEach(btn => {
+        btn.disabled = true;
+      });
+
+      setTimeout(() => {
+        elements.nextButton.classList.remove('hidden');
+        elements.nextButton.style.opacity = '0';
+        setTimeout(() => {
+          elements.nextButton.style.opacity = '1';
+        }, 50);
+      }, 1000);
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      elements.finalScore.textContent = score;
+      switchScreen(elements.quiz, elements.result);
+    }
+
+    function restartQuiz() {
+      switchScreen(elements.result, elements.landing);
+    }
+
+    // Event Listeners
+    document.getElementById('startButton').addEventListener('click', startQuiz);
+    document.getElementById('nextButton').addEventListener('click', nextQuestion);
+    document.getElementById('restartButton').addEventListener('click', restartQuiz);
+    document.querySelectorAll('.answer-button').forEach(button => {
+      button.addEventListener('click', handleAnswer);
+    });
+  </script>
+</body>
+</html>

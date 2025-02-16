@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>שאלון תורת הצבע</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #FF6B6B, #FFE66D);
+      direction: rtl;
+      color: #333;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      position: absolute;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .container.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .back-button {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #333;
+    }
+
+    .answers-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    button {
+      padding: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .correct {
+      background: #22C55E;
+      color: white;
+      border-color: #22C55E;
+      animation: pulse 0.5s;
+    }
+
+    .incorrect {
+      background: #EF4444;
+      color: white;
+      border-color: #EF4444;
+      animation: shake 0.5s;
+    }
+
+    .hidden {
+      display: none;
+      opacity: 0;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FF6B6B, #FFE66D);
+      width: 0;
+      transition: width 0.3s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .score {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #FF6B6B;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="landing">
+    <button class="back-button" onclick="window.location.href='home.html'">←</button>
+    <h1>שאלון תורת הצבע</h1>
+    <p>בואו נבדוק את הידע שלכם בתורת הצבע! 🎨</p>
+    <button id="startButton">התחל</button>
+  </div>
+
+  <div class="container hidden" id="quiz">
+    <div class="score">ניקוד: <span id="score">0</span> / <span id="totalQuestions">0</span></div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <h2 id="questionText"></h2>
+    <div class="answers-grid">
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+      <button class="answer-button" data-correct="false"></button>
+    </div>
+    <div id="feedback"></div>
+    <button id="nextButton" class="hidden">השאלה הבאה</button>
+  </div>
+
+  <div class="container hidden" id="result">
+    <button class="back-button" onclick="window.location.href='home.html'">←</button>
+    <h1>כל הכבוד! 🎉</h1>
+    <p>הצלחת לענות נכון על <span id="finalScore">0</span> שאלות מתוך <span id="totalQuestionsEnd">0</span></p>
+    <button id="restartButton">נסה שוב</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "איזה צבע נוצר מערבוב כחול וצהוב?",
+        answers: [
+          { text: "כתום", correct: false },
+          { text: "ירוק", correct: true },
+          { text: "סגול", correct: false },
+          { text: "חום", correct: false }
+        ]
+      },
+      {
+        question: "מהם הצבעים הראשוניים?",
+        answers: [
+          { text: "אדום, כחול, ירוק", correct: false },
+          { text: "אדום, צהוב, כחול", correct: true },
+          { text: "אדום, כתום, צהוב", correct: false },
+          { text: "כחול, ירוק, סגול", correct: false }
+        ]
+      },
+      {
+        question: "איזה צבע משלים לצבע אדום?",
+        answers: [
+          { text: "כחול", correct: false },
+          { text: "צהוב", correct: false },
+          { text: "ירוק", correct: true },
+          { text: "סגול", correct: false }
+        ]
+      },
+      {
+        question: "מהו מודל הצבע RGB?",
+        answers: [
+          { text: "מודל צבעים להדפסה", correct: false },
+          { text: "מודל צבעים למסך", correct: true },
+          { text: "מודל צבעים לציור", correct: false },
+          { text: "מודל צבעים לצילום", correct: false }
+        ]
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const elements = {
+      landing: document.getElementById('landing'),
+      quiz: document.getElementById('quiz'),
+      result: document.getElementById('result'),
+      questionText: document.getElementById('questionText'),
+      score: document.getElementById('score'),
+      finalScore: document.getElementById('finalScore'),
+      feedback: document.getElementById('feedback'),
+      nextButton: document.getElementById('nextButton'),
+      progressFill: document.querySelector('.progress-fill'),
+      totalQuestions: document.getElementById('totalQuestions'),
+      totalQuestionsEnd: document.getElementById('totalQuestionsEnd')
+    };
+
+    // הצג את המסך הראשון
+    setTimeout(() => {
+      elements.landing.classList.add('active');
+    }, 100);
+
+    function switchScreen(from, to) {
+      from.classList.remove('active');
+      setTimeout(() => {
+        from.classList.add('hidden');
+        to.classList.remove('hidden');
+        setTimeout(() => {
+          to.classList.add('active');
+        }, 50);
+      }, 300);
+    }
+
+    function startQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      elements.score.textContent = '0';
+      elements.totalQuestions.textContent = questions.length;
+      elements.totalQuestionsEnd.textContent = questions.length;
+      switchScreen(elements.landing, elements.quiz);
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const question = questions[currentQuestion];
+      elements.questionText.textContent = question.question;
+      elements.feedback.textContent = '';
+      elements.feedback.classList.remove('show');
+      elements.nextButton.classList.add('hidden');
+
+      // עדכון פרוגרס בר
+      elements.progressFill.style.width = `${(currentQuestion + 1) / questions.length * 100}%`;
+
+      const buttons = document.querySelectorAll('.answer-button');
+      buttons.forEach((button, index) => {
+        button.textContent = question.answers[index].text;
+        button.dataset.correct = question.answers[index].correct;
+        button.disabled = false;
+        button.className = 'answer-button';
+        // אנימציית הופעה הדרגתית לכפתורים
+        button.style.opacity = '0';
+        setTimeout(() => {
+          button.style.opacity = '1';
+        }, index * 100);
+      });
+    }
+
+    function handleAnswer(e) {
+      const button = e.target;
+      const isCorrect = button.dataset.correct === "true";
+
+      if (isCorrect) {
+        score++;
+        elements.score.textContent = score;
+        button.classList.add('correct');
+        elements.feedback.textContent = "נכון! 🎉";
+      } else {
+        button.classList.add('incorrect');
+        elements.feedback.textContent = "לא נכון! ❌";
+        document.querySelectorAll('.answer-button').forEach(btn => {
+          if (btn.dataset.correct === "true") {
+            btn.classList.add('correct');
+          }
+        });
+      }
+
+      elements.feedback.classList.add('show');
+
+      document.querySelectorAll('.answer-button').forEach(btn => {
+        btn.disabled = true;
+      });
+
+      setTimeout(() => {
+        elements.nextButton.classList.remove('hidden');
+        elements.nextButton.style.opacity = '0';
+        setTimeout(() => {
+          elements.nextButton.style.opacity = '1';
+        }, 50);
+      }, 1000);
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      elements.finalScore.textContent = score;
+      switchScreen(elements.quiz, elements.result);
+    }
+
+    function restartQuiz() {
+      switchScreen(elements.result, elements.landing);
+    }
+
+    // Event Listeners
+    document.getElementById('startButton').addEventListener('click', startQuiz);
+    document.getElementById('nextButton').addEventListener('click', nextQuestion);
+    document.getElementById('restartButton').addEventListener('click', restartQuiz);
+    document.querySelectorAll('.answer-button').forEach(button => {
+      button.addEventListener('click', handleAnswer);
+    });
+  </script>
+</body>
+</html> 
